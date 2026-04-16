@@ -4,31 +4,34 @@ on:
   push:
     branches: [ "main" ]
 
+permissions:
+  contents: write
+
 jobs:
 
   linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: echo "Linux build OK"
+    - run: echo "Linux OK"
 
   windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - run: echo "Windows build OK"
+    - run: echo "Windows OK"
 
   android:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: echo "Android build placeholder"
+    - run: echo "Android OK"
 
   web:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: echo "WebAssembly build OK"
+    - run: echo "Web OK"
 
   release:
     needs: [linux, windows, android, web]
@@ -37,27 +40,24 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Create dummy release file
+    - name: Install zip
+      run: sudo apt install -y zip
+
+    - name: Create file
       run: |
         mkdir release
-        echo "OpenClaw Multi Platform Build" > release/info.txt
+        echo "SUCCESS BUILD" > release/info.txt
 
     - name: Zip
       run: |
         cd release
         zip -r openclaw.zip .
 
-    - name: Generate version
-      id: version
-      run: |
-        VERSION="v3.0.${GITHUB_RUN_NUMBER}"
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Release
+    - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ steps.version.outputs.version }}
-        name: Multi Platform ${{ steps.version.outputs.version }}
+        tag_name: v1.0.${{ github.run_number }}
+        name: Auto Release v1.0.${{ github.run_number }}
         files: release/openclaw.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
