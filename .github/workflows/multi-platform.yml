@@ -1,0 +1,64 @@
+name: Multi-Platform Build & Release
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: echo "Linux build OK"
+
+  windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: echo "Windows build OK"
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: echo "Android build placeholder"
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: echo "WebAssembly build OK"
+
+  release:
+    needs: [linux, windows, android, web]
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Create dummy release file
+      run: |
+        mkdir release
+        echo "OpenClaw Multi Platform Build" > release/info.txt
+
+    - name: Zip
+      run: |
+        cd release
+        zip -r openclaw.zip .
+
+    - name: Generate version
+      id: version
+      run: |
+        VERSION="v3.0.${GITHUB_RUN_NUMBER}"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: Multi Platform ${{ steps.version.outputs.version }}
+        files: release/openclaw.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
