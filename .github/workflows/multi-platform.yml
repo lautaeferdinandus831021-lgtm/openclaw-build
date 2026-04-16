@@ -1,4 +1,4 @@
-name: Multi-Platform Build & Release
+name: Build OpenClaw (Linux Real)
 
 on:
   push:
@@ -8,57 +8,50 @@ permissions:
   contents: write
 
 jobs:
-
   linux:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - run: echo "Linux OK"
-
-  windows:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v4
-    - run: echo "Windows OK"
-
-  android:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - run: echo "Android OK"
-
-  web:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - run: echo "Web OK"
-
-  release:
-    needs: [linux, windows, android, web]
-    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    - name: Install zip
-      run: sudo apt install -y zip
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          build-essential cmake git zip \
+          libsdl2-dev libsdl2-image-dev \
+          libsdl2-mixer-dev libsdl2-ttf-dev \
+          libtinyxml2-dev zlib1g-dev
 
-    - name: Create file
+    - name: Clone OpenClaw
+      run: |
+        git clone https://github.com/pjasicek/OpenClaw.git openclaw-src
+
+    - name: Build OpenClaw
+      run: |
+        cd openclaw-src
+        mkdir build
+        cd build
+        cmake ..
+        make -j$(nproc)
+
+    - name: Prepare release
       run: |
         mkdir release
-        echo "SUCCESS BUILD" > release/info.txt
+        cp -r openclaw-src/build/* release/
 
-    - name: Zip
+    - name: Zip binary
       run: |
         cd release
-        zip -r openclaw.zip .
+        zip -r openclaw-linux.zip .
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v1.0.${{ github.run_number }}
-        name: Auto Release v1.0.${{ github.run_number }}
-        files: release/openclaw.zip
+        tag_name: v1.1.${{ github.run_number }}
+        name: OpenClaw Linux Build v1.1.${{ github.run_number }}
+        files: release/openclaw-linux.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
