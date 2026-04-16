@@ -1,2 +1,13 @@
-# Google App Engine generated folder
-appengine-generated/
+# Build files
+build/
+*.o
+*.log
+
+# Node
+node_modules/
+
+# Env
+.env
+
+# OS
+.DS_Store
